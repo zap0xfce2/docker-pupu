@@ -1,6 +1,6 @@
 # Docker-PuPu
 
-A simple script to clone a docker repository. Download, retag, upload ... done!
+A simple script to clone a docker repository. Pull, retag, push ... done!
 
 ## Requirements
 
