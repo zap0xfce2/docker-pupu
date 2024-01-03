@@ -1,19 +1,20 @@
 # Docker-PuPu
 
-A simple script to clone a docker repository. Pull, retag, push ... done!
+A simple script to clone the contens of an docker repository to an remote repository.
 
 ## Requirements
 
 - Python 3.x
-- Docker
 - Crane executable
+- Skopeo executable
 
 ## Setup
 
 1. Download `crane` from [this github page](https://github.com/google/go-containerregistry) and put it in the same directory as the script.
-2. Edit **source_registry** and **target_registry** in `docker-pupu.py`.
+2. Download `skopeo` from [this github page](https://github.com/containers/skopeo/releases) and put it in the same directory as the script.
+3. Edit **source_registry** and **target_registry** in `docker-pupu.py`.
 
-If you don't have two registries, you can create them using:
+If you don't have two registries for testing, you can create them using:
 
 ```bash
 docker run -d -p 5555:5000 --restart always --name registry1 registry:2
