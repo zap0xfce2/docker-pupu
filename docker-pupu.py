@@ -38,15 +38,12 @@ for repo in repo_array:
         print(f"Uploading {repo}:{tag} to {target_registry}...")
         command = [
             "./skopeo",
-            "sync",
-            "--src",
-            "docker",
-            "--dest",
-            "docker",
+            "copy",
+            "--quiet",
             "--src-tls-verify=false",
             "--dest-tls-verify=false",
-            f"{source_registry}/{repo}:{tag}",
-            f"{target_registry}/{repo}",
+            f"docker://{source_registry}/{repo}:{tag}",
+            f"docker://{target_registry}/{repo}:{tag}",
         ]
         subprocess.run(command)
 
