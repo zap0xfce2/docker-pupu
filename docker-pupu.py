@@ -36,16 +36,64 @@ for repo in repo_array:
     # Sync every tag with skopeo
     for tag in tag_array:
         print(f"Uploading {repo}:{tag} to {target_registry}...")
-        command = [
+        copy_command = [
             "./skopeo",
             "copy",
             "--quiet",
-            "--src-tls-verify=false",
-            "--dest-tls-verify=false",
             f"docker://{source_registry}/{repo}:{tag}",
             f"docker://{target_registry}/{repo}:{tag}",
         ]
-        subprocess.run(command)
+        subprocess.run(copy_command)
+        verify_source_command = [
+            "./skopeo",
+            "inspect",
+            f"docker://{source_registry}/{repo}:{tag}",
+            "--format",
+            "'{{.Digest}}'",
+        ]
+        verify_target_command = [
+            "./skopeo",
+            "inspect",
+            f"docker://{target_registry}/{repo}:{tag}",
+            "--format",
+            "'{{.Digest}}'",
+        ]
+        checksum_source = subprocess.run(
+            verify_source_command, capture_output=True, text=True
+        ).stdout.strip()
+        checksum_target = subprocess.run(
+            verify_target_command, capture_output=True, text=True
+        ).stdout.strip()
+
+        # Retry the copy if there is a checksum mismatch
+        retry_limit = 3
+        retries = 0
+        while checksum_source != checksum_target and retries < retry_limit:
+            print(f"Checksum mismatch for {repo}:{tag}. Retrying...")
+
+            delete_command = [
+                "./skopeo",
+                "delete",
+                f"docker://{target_registry}/{repo}:{tag}",
+            ]
+            subprocess.run(delete_command)
+
+            subprocess.run(copy_command)
+
+            checksum_source = subprocess.run(
+                verify_source_command, capture_output=True, text=True
+            ).stdout.strip()
+            checksum_target = subprocess.run(
+                verify_target_command, capture_output=True, text=True
+            ).stdout.strip()
+
+            retries += 1
+
+        if checksum_source != checksum_target:
+            print(
+                f"Failed to correctly sync {repo}:{tag} after {retry_limit} attempts."
+            )
+            exit()
 
 # Stop timer and print summary
 stop_timer = timeit.default_timer()
